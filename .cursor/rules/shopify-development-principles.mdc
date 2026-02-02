@@ -1,0 +1,45 @@
+---
+description: Principios de desarrollo del tema Dr. Martens — Shopify way, buenas prácticas y mantenibilidad
+globs:
+alwaysApply: true
+---
+
+# Principios de desarrollo del tema Dr. Martens
+
+Premisas del proyecto para personalizar y construir la tienda de forma alineada con Shopify, con buenas prácticas y código mantenible.
+
+## 1. Enfoque "Shopify way"
+
+- **Priorizar las capacidades nativas de Shopify:** Usar theme settings, metafields, markets, localización y APIs documentadas antes que soluciones custom o workarounds.
+- **Arquitectura del tema:** Respetar la estructura Horizon: **sections** como contenedores editables, **theme blocks** reutilizables (estáticos y dinámicos), **snippets** para fragmentos, **templates** JSON que ensamblan secciones y bloques. No introducir patrones que rompan esta arquitectura.
+- **Liquid como capa de presentación:** El HTML debe generarse en el servidor con Liquid. Lógica de negocio, formato de dinero e idiomas pertenecen al servidor/Shopify; el cliente solo para interacción y mejora progresiva.
+- **Theme Editor primero:** Todo lo que el comerciante debe poder cambiar (textos, imágenes, colores, visibilidad, orden) debe ser configurable vía schema (settings y blocks), no hardcodeado.
+- **Documentación oficial como referencia:** Ante dudas de APIs, Liquid, theme architecture o Storefront, usar [Shopify theme docs](https://shopify.dev/docs/themes) y el MCP de Shopify (learn_shopify_api + search_docs_chunks) en lugar de asumir o inventar.
+
+## 2. Buenas prácticas de desarrollo Shopify
+
+- **Reglas del proyecto:** Seguir las Cursor rules existentes del repo:
+  - **Liquid:** [liquid.mdc](mdc:.cursor/rules/liquid.mdc) — tags/filtros válidos, no editar `{% schema %}` en .liquid si existe `schemas/`.
+  - **Sections:** [sections.mdc](mdc:.cursor/rules/sections.mdc) — estructura, `content_for 'blocks'`, scoping CSS, traducciones.
+  - **Blocks:** [blocks.mdc](mdc:.cursor/rules/blocks.mdc) — theme blocks, `block.shopify_attributes`, presets, uso estático/dinámico.
+  - **Schemas:** [schemas.mdc](mdc:.cursor/rules/schemas.mdc) — estructura JSON, IDs, tipos de settings.
+  - **Snippets:** [snippets.mdc](mdc:.cursor/rules/snippets.mdc) — `{% doc %}`, parámetros documentados.
+  - **Templates, locales, assets, theme-settings:** Usar las reglas correspondientes (.cursor/rules/).
+- **Accesibilidad:** Todas las reglas de accesibilidad del proyecto (formularios, focus, landmarks, imágenes, contraste, headings, etc.) son obligatorias.
+- **Validación:** Usar Theme Check (`shopify theme check`) y, cuando se generen o modifiquen archivos del tema, el MCP `validate_theme` con la ruta absoluta del tema.
+- **Sin inventar APIs:** No usar tags, filtros u objetos Liquid no documentados; no asumir propiedades de `shop`, `product`, `collection`, etc. sin verificar en la documentación.
+
+## 3. Mantenibilidad del código
+
+- **DRY:** Reutilizar snippets y blocks existentes; extraer patrones repetidos a snippets o bloques en lugar de duplicar markup o lógica.
+- **Nombrado consistente:** IDs y clases predecibles; convenciones del tema (p. ej. BEM donde aplique); keys de traducción con prefijos claros (`t:names.`, `t:settings.`).
+- **Schemas centralizados:** Si el proyecto usa la carpeta `schemas/`, los cambios de schema se hacen en los fuentes (JS) y se regeneran con `npm run build:schemas`; no editar el bloque `{% schema %}` directamente en .liquid.
+- **Documentación en código:** Snippets con `{% doc %}`; secciones y bloques complejos con comentarios que expliquen el propósito, no el paso a paso obvio.
+- **Evolución desde Horizon:** Preferir extender y personalizar Horizon (settings, bloques nuevos, overlays de secciones) antes que reescribir secciones enteras; así las actualizaciones desde upstream son más fáciles de integrar.
+- **Living docs:** Cualquier patrón, trampa o decisión técnica relevante debe quedar registrado en `.cursor/prompts/` o `.cursor/references/` según [prompts-and-references.mdc](mdc:.cursor/rules/prompts-and-references.mdc).
+
+## Resumen para el agente
+
+- Al implementar: ¿esto usa capacidades nativas de Shopify y la arquitectura sections/blocks/snippets?
+- Al escribir código: ¿cumple las reglas de Liquid, sections, blocks y schemas del repo?
+- Al terminar un cambio: ¿el código es reutilizable, nombrado claro y documentado donde aporte valor? ¿Hay algo que deba actualizarse en prompts/references?
